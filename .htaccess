@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteBase /mvc/
+
+# RewriteCond %{REQUEST_URI} !^/public
+
+RewriteCond %{REQUEST_URI} !^/mvc/public
+RewriteRule ^(.*)$ public/index.php?url=$1 [QSA,L]
