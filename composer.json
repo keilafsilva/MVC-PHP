@@ -6,5 +6,10 @@
             "email": "keilafern96@gmail.com"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
     "require": {}
 }

@@ -3,7 +3,6 @@
 namespace App\Core;
 
 require_once __DIR__ . '/../controllers/homeController.php';
-require_once __DIR__ . '/../controllers/NoticiasController.php';
 require_once __DIR__ . '/../controllers/Error/HttpErrorController.php';
 
 class Router
@@ -16,12 +15,10 @@ class Router
         $controllerName = $parts[0] ?? 'Home';
         $controllerName = ucfirst($controllerName) . 'Controller';
 
-        // classes de controllers estão no namespace global (sem namespace),
-        // então usamos o nome totalmente qualificado com barra inicial
         $controllerClass = '\\' . $controllerName;
 
         $httpErrorControllerClass = '\\HttpErrorController';
-        
+
 
         if (class_exists($controllerClass)) {
             $controller = new $controllerClass();
@@ -45,4 +42,3 @@ class Router
         }
     }
 }
-?>
