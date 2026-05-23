@@ -1,2 +1,3 @@
 app/controllers/NoticiasController.php
 app/views/noticias/
+/vendor/
