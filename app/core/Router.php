@@ -10,9 +10,11 @@ class Router
     {
         $url = trim($url, '/');
         $parts = $url ? explode('/', $url) : [];
-        $controllerClass = 'App\\Controllers\\' . ucfirst($parts[0] ?? 'Home') . 'Controller';
-
+        $controllerClass = $parts[0] ?? 'home';
+        $controllerClass = 'App\\Controllers\\' . ucfirst($controllerClass) . 'Controller';
         $actionName = $parts[1] ?? 'index';
+        //dd($controllerClass, $actionName, $parts, $url);
+
 
         if (!class_exists($controllerClass)) {
             $httpErrorController = new HttpErrorController();
