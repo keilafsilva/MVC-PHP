@@ -2,8 +2,7 @@
 
 namespace App\Core;
 
-require_once __DIR__ . '/../controllers/homeController.php';
-require_once __DIR__ . '/../controllers/Error/HttpErrorController.php';
+use App\Controllers\Error\HttpErrorController;
 
 class Router
 {
@@ -11,34 +10,25 @@ class Router
     {
         $url = trim($url, '/');
         $parts = $url ? explode('/', $url) : [];
+        $controllerClass = 'App\\Controllers\\' . ucfirst($parts[0] ?? 'Home') . 'Controller';
 
-        $controllerName = $parts[0] ?? 'Home';
-        $controllerName = ucfirst($controllerName) . 'Controller';
+        $actionName = $parts[1] ?? 'index';
 
-        $controllerClass = '\\' . $controllerName;
-
-        $httpErrorControllerClass = '\\HttpErrorController';
-
-
-        if (class_exists($controllerClass)) {
-            $controller = new $controllerClass();
-            $actionName = $parts[1] ?? 'index';
-            $params = array_slice($parts, 2);
-
-            if (method_exists($controller, $actionName)) {
-                call_user_func_array([$controller, $actionName], $params);
-            } else {
-                $HttpErrorController = new $httpErrorControllerClass();
-                $HttpErrorController->notFound();
-            }
-        } else {
-            if (class_exists($httpErrorControllerClass)) {
-                $HttpErrorController = new $httpErrorControllerClass();
-                $HttpErrorController->notFound();
-            } else {
-                echo "404 Not Found";
-            }
+        if (!class_exists($controllerClass)) {
+            $httpErrorController = new HttpErrorController();
+            $httpErrorController->notFound();
             return;
         }
+
+        $controller = new $controllerClass();
+
+        if (!method_exists($controller, $actionName)) {
+            $httpErrorController = new HttpErrorController();
+            $httpErrorController->notFound();
+            return;
+        }
+
+        $params = array_slice($parts, 2);
+        call_user_func_array([$controller, $actionName], $params);
     }
 }
