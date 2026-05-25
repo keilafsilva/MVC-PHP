@@ -6,7 +6,7 @@ use App\Controllers\Error\HttpErrorController;
 
 class Router
 {
-    public function dispatch($url)
+    public function dispatch(string $url) : void
     {
         $url = trim($url, '/');
         $parts = $url ? explode('/', $url) : [];
@@ -14,7 +14,6 @@ class Router
         $controllerClass = 'App\\Controllers\\' . ucfirst($controllerClass) . 'Controller';
         $actionName = $parts[1] ?? 'index';
         //dd($controllerClass, $actionName, $parts, $url);
-
 
         if (!class_exists($controllerClass)) {
             $httpErrorController = new HttpErrorController();

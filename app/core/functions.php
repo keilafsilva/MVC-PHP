@@ -1,6 +1,6 @@
 <?php
 
-function dd(...$vars)
+function dd(...$vars) : never
 {
     echo '<pre style="background: #fff; 
     padding: 10px; 
@@ -18,4 +18,10 @@ function dd(...$vars)
     
     echo '</pre>';
     die();
+}
+
+function config(string $key, mixed $default = null) : mixed
+{
+    $config = require __DIR__ . '/../config/config.php';
+    return $config[$key] ?? $default;
 }

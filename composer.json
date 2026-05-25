@@ -14,5 +14,7 @@
             "app/core/functions.php"
         ]
     },
-    "require": {}
+    "require": {
+        "vlucas/phpdotenv": "^5.6"
+    }
 }
