@@ -4,10 +4,11 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\Usuario;
+use Symfony\Component\HttpFoundation\Request;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(?Request $request = null)
     {
         $usuario = new Usuario();
         $data = $usuario->getUserData();
@@ -32,11 +33,13 @@ class HomeController extends Controller
         return;
     }
 
-
-
     public function contact()
     {
         $this->view('home/contact');
         return;
+    }
+
+    function teste() {
+        return $this->redirect('https://google.com');
     }
 }

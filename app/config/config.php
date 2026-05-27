@@ -1,6 +1,4 @@
 <?php
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
-$dotenv->Load();
 
 return [
     'database' => [
