@@ -4,7 +4,7 @@ API para gestão de tarefas colaborativas, desenvolvida com PHP 8 seguindo o pad
 
 ## Autora
 
-Keila Fernanda da Silva — Engenharia de Software, UNISINOS
+Keila Fernanda da Silva 
 
 ---
 
