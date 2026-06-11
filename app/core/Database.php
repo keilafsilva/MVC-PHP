@@ -55,10 +55,10 @@ class Database
     }
 
     // retorna o rowCount 
-    public function execute(string $sql, array $params = []): string
+    public function execute(string $sql, array $params = []): bool
     {
         $stmt = $this->query($sql, $params);
-        return $stmt->rowCount();
+        return $stmt->rowCount() > 0;
     }
 
     // Retorna o ultimo ID inserido

@@ -1,50 +1,92 @@
 <?php
+
 namespace App\Models;
+
+use App\Core\Database;
 
 use App\Core\Model;
 
 class Usuario extends Model
 {
-    public function getUserData()
+    public function __construct(?Database $db = null)
     {
-        return [
-            'id' => 1,
-            'nome' => 'Juan Pérez',
-            'email' => 'juan.perez@example.com'
-        ];
+        if ($db !== null) {
+            $this->db = $db;
+        } else {
+            parent::__construct();
+        }
+    }
+    public function createUser(string $nome, string $email, string $senha): int|false
+    {
+        $this->db->execute(
+            "INSERT INTO usuarios (nome, email, senha, created_at) VALUES (:nome, :email, :senha, NOW())",
+            [':nome' => $nome, ':email' => $email, ':senha' => password_hash($senha, PASSWORD_BCRYPT)]
+        );
+        return (int) $this->db->lastInsertId() ?: false;
     }
 
-    public function createUser($name)
+    public function getAllUsers(): array
     {
-        // Lógica para criar um novo usuário no banco de dados
-        $sql = "INSERT INTO usuarios (nome) VALUES (:nome)";
-        $params = [
-            ':nome' => $name
-        ];
-
-        return $this->db->execute($sql, $params);
+        return $this->db->fetchAll(
+            "SELECT id, nome, email, created_at FROM usuarios WHERE deleted_at IS NULL"
+        );
     }
 
-    public function getAllUsers()
+    public function getUserById(int $id): array|false
     {
-        $sql = "SELECT * FROM usuarios";
-        return $this->db->fetchAll($sql);
+        return $this->db->fetch(
+            "SELECT id, nome, email, created_at FROM usuarios WHERE id = :id AND deleted_at IS NULL",
+            [':id' => $id]
+        );
     }
 
-    public function getUserById($id)
+    public function getUserByEmail(string $email): array|false
     {
-        $sql = "SELECT * FROM usuarios WHERE id = :id";
-        $params = [
-            ':id' => $id
-        ];
-        return $this->db->fetch($sql, $params);
+        return $this->db->fetch(
+            "SELECT id, nome, email, senha FROM usuarios WHERE email = :email AND deleted_at IS NULL",
+            [':email' => $email]
+        );
     }
 
-    public function getUserCount()
+    public function updateUser(int $id, array $dados): bool
     {
-        $sql = "SELECT COUNT(*) as count FROM usuarios";
-        $result = $this->db->fetch($sql);
-        return $result['count'];
+        $campos = [];
+        $params = [':id' => $id];
+
+        if (!empty($dados['nome'])) {
+            $campos[] = 'nome = :nome';
+            $params[':nome'] = $dados['nome'];
+        }
+        if (!empty($dados['email'])) {
+            $campos[] = 'email = :email';
+            $params[':email'] = $dados['email'];
+        }
+        if (!empty($dados['senha'])) {
+            $campos[] = 'senha = :senha';
+            $params[':senha'] = password_hash($dados['senha'], PASSWORD_BCRYPT);
+        }
+
+        if (empty($campos)) return false;
+
+        return $this->db->execute(
+            "UPDATE usuarios SET " . implode(', ', $campos) . " WHERE id = :id",
+            $params
+        );
     }
 
+    public function deleteUser(int $id): bool
+    {
+        return $this->db->execute(
+            "UPDATE usuarios SET deleted_at = NOW() WHERE id = :id",
+            [':id' => $id]
+        );
+    }
+
+    public function unassignTasks(int $userId): bool
+    {
+        return $this->db->execute(
+            "UPDATE tarefas SET atribuido_a_id = NULL WHERE atribuido_a_id = :id",
+            [':id' => $userId]
+        );
+    }
 }

@@ -1,0 +1,519 @@
+openapi: 3.0.0
+
+info:
+  title: Task Manager API
+  description: API RESTful para gerenciamento de tarefas colaborativas
+  version: 1.1.0
+
+servers:
+  - url: http://localhost/mvc
+    description: Servidor local
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Tarefa:
+      type: object
+      properties:
+        id:
+          type: integer
+        titulo:
+          type: string
+        descricao:
+          type: string
+        status:
+          type: string
+          enum: [pendente, em_andamento, concluida]
+        criado_por_id:
+          type: integer
+        atribuido_a_id:
+          type: integer
+          nullable: true
+        criador_nome:
+          type: string
+        atribuido_nome:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login do usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, senha]
+              properties:
+                email:
+                  type: string
+                  example: joao@email.com
+                senha:
+                  type: string
+                  example: "123456"
+      responses:
+        "200":
+          description: Login realizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  token:
+                    type: string
+                  usuario:
+                    $ref: "#/components/schemas/Usuario"
+        "401":
+          description: Credenciais invalidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout do usuario
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logout realizado com sucesso
+        "401":
+          description: Token invalido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users:
+    post:
+      tags: [Users]
+      summary: Criar novo usuario
+      description: Endpoint publico. Requer nome, email e senha. Retorna 409 se o email ja estiver cadastrado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, email, senha]
+              properties:
+                nome:
+                  type: string
+                  example: Joao Silva
+                email:
+                  type: string
+                  example: joao@email.com
+                senha:
+                  type: string
+                  example: "123456"
+      responses:
+        "201":
+          description: Usuario criado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Usuario"
+        "409":
+          description: Email ja cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      tags: [Users]
+      summary: Listar todos os usuarios
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Usuario"
+        "401":
+          description: Token invalido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Buscar usuario por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Usuario"
+        "404":
+          description: Usuario nao encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags: [Users]
+      summary: Atualizar usuario
+      description: >
+        Requer `senha_atual` para confirmar a identidade do usuario antes de salvar.
+        O campo `senha` é opcional — se omitido, a senha atual é mantida.
+        Apenas o proprio usuario pode editar seu perfil.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [senha_atual]
+              properties:
+                nome:
+                  type: string
+                  example: Joao Silva
+                email:
+                  type: string
+                  example: joao@email.com
+                senha_atual:
+                  type: string
+                  description: Senha atual obrigatoria para confirmar a edicao
+                  example: "senha_antiga"
+                senha:
+                  type: string
+                  description: Nova senha (opcional — omitir para manter a atual)
+                  example: "nova_senha"
+      responses:
+        "200":
+          description: Usuario atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Usuario"
+        "403":
+          description: Senha atual incorreta ou sem permissao
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Usuario nao encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Dados invalidos ou senha_atual ausente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags: [Users]
+      summary: Remover usuario
+      description: >
+        Apenas o proprio usuario pode deletar sua conta.
+        As tarefas atribuidas a ele terao `atribuido_a_id` definido como null automaticamente.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Usuario removido com sucesso
+        "403":
+          description: Sem permissao para deletar este usuario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Usuario nao encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /tasks:
+    post:
+      tags: [Tasks]
+      summary: Criar nova tarefa
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titulo]
+              properties:
+                titulo:
+                  type: string
+                  example: Implementar autenticacao
+                descricao:
+                  type: string
+                  example: Criar middleware JWT
+                atribuido_a_id:
+                  type: integer
+                  example: 2
+      responses:
+        "201":
+          description: Tarefa criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Tarefa"
+        "401":
+          description: Token invalido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      tags: [Tasks]
+      summary: Listar tarefas
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: assignedTo
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filtrar tarefas por usuario atribuido
+      responses:
+        "200":
+          description: Lista de tarefas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Tarefa"
+        "401":
+          description: Token invalido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /tasks/{id}:
+    get:
+      tags: [Tasks]
+      summary: Buscar tarefa por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tarefa encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Tarefa"
+        "404":
+          description: Tarefa nao encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags: [Tasks]
+      summary: Atualizar tarefa
+      description: >
+        O criador pode editar todos os campos.
+        O usuario atribuido pode alterar apenas o status.
+        Outros usuarios recebem 403.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titulo:
+                  type: string
+                descricao:
+                  type: string
+                status:
+                  type: string
+                  enum: [pendente, em_andamento, concluida]
+                atribuido_a_id:
+                  type: integer
+                  nullable: true
+      responses:
+        "200":
+          description: Tarefa atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Tarefa"
+        "403":
+          description: Sem permissao para editar esta tarefa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Tarefa nao encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags: [Tasks]
+      summary: Remover tarefa
+      description: Apenas o criador da tarefa pode removê-la.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tarefa removida com sucesso
+        "403":
+          description: Sem permissao para deletar esta tarefa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Tarefa nao encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

@@ -24,7 +24,7 @@ class Controller
         require_once $viewFile;
     }
 
-    protected function json(array $data, int $statusCode = 200) : never
+    protected function json(array $data, int $statusCode = 200) : void
     {
         $response = new JsonResponse($data, $statusCode);
         $response->send();
@@ -33,7 +33,7 @@ class Controller
 
     protected function redirect(string $url, int $statusCode = 302) : never
     {
-        $response = new redirectResponse($url, $statusCode);
+        $response = new RedirectResponse($url, $statusCode);
         $response->send();
         exit;
     }
