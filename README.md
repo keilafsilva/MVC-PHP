@@ -314,27 +314,7 @@ O relatório HTML é gerado em `coverage/index.html`.
 |--------|-----------------|-----------------|
 | `App\Models\Usuario` | 75% (6/8) | 93% (40/43) |
 | `App\Models\Tarefa` | 62% (5/8) | 82% (52/63) |
-| Total geral | ~18% (12/67) | ~24% (93/389) |
 
 > A cobertura está concentrada nos Models, onde reside a lógica de dados crítica. Os Controllers são cobertos via classes testáveis que replicam a lógica de negócio.
 
-### Casos de Teste
 
-**UserController (12 testes):**
-- Criação com sucesso, sem nome, sem email, sem senha, email inválido, email duplicado
-- Listagem de usuários
-- Busca por ID válido, ID inválido, não encontrado
-- Exclusão com sucesso, sem permissão, não encontrado
-
-**TaskController (14 testes):**
-- Criação com sucesso, sem título, erro interno
-- Listagem de tarefas
-- Busca por ID válido, ID inválido, não encontrado
-- Atualização com sucesso, ID inválido, não encontrada, body vazio, sem alteração
-- Exclusão com sucesso, ID inválido, não encontrada
-
-**Models (32 testes):**
-- CRUD completo de usuários e tarefas
-- Validações de unicidade de email
-- Atribuição e desatribuição de tarefas
-- Busca por ID, email e listagem geral
